@@ -39,3 +39,8 @@ coverage/
 
 # Optional: local datasets / large dumps (uncomment if you don't want them in git)
 # *.csv
+
+# Added by Apify CLI
+storage
+node_modules
+.venv

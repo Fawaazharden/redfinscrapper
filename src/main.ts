@@ -15,27 +15,49 @@ interface Input {
   proxy?: Record<string, unknown>;
 }
 
+function normalizeInput(raw: Input | null | undefined): Input {
+  const merged: Input = {
+    startUrl: DEFAULT_START_URL,
+    maxConcurrency: 1,
+    ...raw,
+  };
+
+  const url = merged.startUrl?.trim();
+  if (!url) {
+    throw new Error(
+      'Input "startUrl" is missing or empty. In the Apify console, open Input → Restore example input, or set startUrl to your Redfin search URL.',
+    );
+  }
+  merged.startUrl = url;
+
+  return merged;
+}
+
 await Actor.init();
 
 try {
-  const input = (await Actor.getInput<Input>()) ?? {
-    startUrl: DEFAULT_START_URL,
-    maxConcurrency: 1,
-  };
+  const rawInput = await Actor.getInput<Input>();
+  const input = normalizeInput(rawInput);
 
-  if (!input.startUrl) {
-    throw new Error('Input field "startUrl" is required.');
-  }
-
-  log.info('Starting Redfin scraper', {
+  log.info('Redfin actor started', {
+    hasRawInput: rawInput != null,
+    rawKeys: rawInput && typeof rawInput === 'object' ? Object.keys(rawInput) : [],
     startUrl: input.startUrl,
     maxConcurrency: input.maxConcurrency ?? 1,
   });
 
-  const proxyConfiguration = input.proxy
-    ? await Actor.createProxyConfiguration({ ...input.proxy, checkAccess: true })
-    : undefined;
-  const proxyUrl = await proxyConfiguration?.newUrl();
+  // Match Apify template: always attach proxy config on the platform (credentials come from env).
+  // checkAccess: false avoids failing the run when validation is flaky; proxy URL still resolves on use.
+  const proxyConfiguration = await Actor.createProxyConfiguration({
+    useApifyProxy: true,
+    ...(input.proxy ?? {}),
+    checkAccess: false,
+  } as Parameters<typeof Actor.createProxyConfiguration>[0]);
+
+  const proxyUrl = await proxyConfiguration?.newUrl().catch((err: unknown) => {
+    log.warning('Could not get proxy URL; continuing without proxy for Camoufox launch.', { err });
+    return undefined;
+  });
 
   const crawler = new PlaywrightCrawler({
     proxyConfiguration,
@@ -64,10 +86,10 @@ try {
   if (crawler.stats.state.requestsFailed > 0) {
     throw new Error(`Crawler finished with ${crawler.stats.state.requestsFailed} failed request(s).`);
   }
+
+  await Actor.exit();
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   log.error('Actor failed', { error });
   await Actor.fail(message);
 }
-
-await Actor.exit();

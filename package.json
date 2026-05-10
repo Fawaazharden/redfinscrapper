@@ -1,0 +1,23 @@
+{
+  "name": "redfin-crawlee-camoufox-actor",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "build": "tsc --noEmit",
+    "postinstall": "camoufox-js fetch"
+  },
+  "dependencies": {
+    "@crawlee/playwright": "^3.16.0",
+    "apify": "^3.7.1",
+    "camoufox-js": "^0.10.2",
+    "crawlee": "^3.16.0",
+    "playwright": "^1.59.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "title": "Redfin scraper input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "startUrl": {
+      "title": "Redfin search URL",
+      "type": "string",
+      "description": "A single Redfin search results URL to scrape.",
+      "editor": "textfield",
+      "prefill": "https://www.redfin.com/city/1903/FL/Boca-Raton/filter/property-type=condo,min-beds=2,min-baths=2,include=sold-1yr,viewport=26.34067:26.32617:-80.13766:-80.15383,no-outline"
+    },
+    "maxConcurrency": {
+      "title": "Max concurrency",
+      "type": "integer",
+      "description": "Maximum number of Redfin pages to process at once.",
+      "editor": "number",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 5
+    },
+    "proxy": {
+      "title": "Proxy configuration",
+      "type": "object",
+      "description": "Apify proxy configuration. Residential proxies are recommended for Redfin.",
+      "editor": "proxy",
+      "default": {
+        "useApifyProxy": true
+      }
+    }
+  },
+  "required": ["startUrl"]
+}
